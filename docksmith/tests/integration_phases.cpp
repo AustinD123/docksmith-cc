@@ -6,6 +6,7 @@
 
 #include "engine/commands.hpp"
 #include "engine/parser.hpp"
+#include "store/cache.hpp"
 #include "store/images.hpp"
 #include "store/layers.hpp"
 #include "store/types.hpp"
@@ -160,6 +161,52 @@ int main() {
         const auto deleted = store::DeleteLayer(stateRoot, layer3.digest);
         Check(&t, deleted.ok, "phase 3 delete layer api");
     }
+
+    // Build engine + cache (RUN omitted so this works cross-platform).
+    const auto buildContext = workRoot / "build-context";
+    std::filesystem::create_directories(buildContext, ec);
+    Check(&t, !ec, "create build context");
+    Check(&t, WriteTextFile(buildContext / "hello.txt", "hello from context\n"), "write build context file");
+
+    const std::string buildFile =
+        "FROM scratch\n"
+        "WORKDIR /app\n"
+        "COPY hello.txt /app/\n"
+        "CMD [\"/bin/sh\",\"-c\",\"cat /app/hello.txt\"]\n";
+    Check(&t, WriteTextFile(buildContext / "Docksmithfile", buildFile), "write build Docksmithfile");
+
+    const int build1 = engine::Build(stateRoot.string(), {"-t", "demo:latest", buildContext.string()});
+    Check(&t, build1 == 0, "phase 4 build first run");
+
+    const auto builtImage1 = store::LoadImage(stateRoot, "demo", "latest");
+    Check(&t, builtImage1.ok, "phase 4 image created");
+    std::string createdStamp;
+    if (builtImage1.ok) {
+        createdStamp = builtImage1.manifest.created;
+        Check(&t, builtImage1.manifest.layers.size() == 1U, "phase 4 expected one COPY layer");
+    }
+
+    const int build2 = engine::Build(stateRoot.string(), {"-t", "demo:latest", buildContext.string()});
+    Check(&t, build2 == 0, "phase 4 build second run");
+
+    const auto builtImage2 = store::LoadImage(stateRoot, "demo", "latest");
+    Check(&t, builtImage2.ok, "phase 4 image load after rebuild");
+    if (builtImage2.ok && !createdStamp.empty()) {
+        Check(&t, builtImage2.manifest.created == createdStamp, "phase 2 created timestamp preserved");
+    }
+
+    const auto cacheLoaded = store::LoadCacheIndex(stateRoot);
+    Check(&t, cacheLoaded.ok, "phase 4 cache index readable");
+    if (cacheLoaded.ok) {
+        Check(&t, !cacheLoaded.entries.empty(), "phase 4 cache entries exist");
+    }
+
+#if defined(__linux__)
+    const int runCode = engine::Run(stateRoot.string(), {"demo:latest"});
+    Check(&t, runCode == 0, "phase 5 runtime executes image cmd");
+#else
+    Check(&t, true, "phase 5 runtime skipped on non-linux host");
+#endif
 
     std::filesystem::remove_all(root, ec);
 
