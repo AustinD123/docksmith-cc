@@ -1,0 +1,4 @@
+C:/Users/HP/projects/docksmith-cc/docksmith/build/CMakeFiles/docksmith.dir
+C:/Users/HP/projects/docksmith-cc/docksmith/build/CMakeFiles/docksmith_integration_phases.dir
+C:/Users/HP/projects/docksmith-cc/docksmith/build/CMakeFiles/edit_cache.dir
+C:/Users/HP/projects/docksmith-cc/docksmith/build/CMakeFiles/rebuild_cache.dir

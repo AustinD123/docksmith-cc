@@ -9,6 +9,7 @@ add_executable(docksmith
     cmd/main.cpp
     engine/build.cpp
     engine/runtime.cpp
+    engine/isolation.cpp
     engine/cache.cpp
     engine/layers.cpp
     engine/parser.cpp
@@ -21,3 +22,18 @@ add_executable(docksmith
 )
 
 target_include_directories(docksmith PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(docksmith_integration_phases
+    tests/integration_phases.cpp
+    engine/build.cpp
+    engine/runtime.cpp
+    engine/isolation.cpp
+    engine/parser.cpp
+    store/cache.cpp
+    store/images.cpp
+    store/layers.cpp
+    util/tar.cpp
+    util/hash.cpp
+)
+
+target_include_directories(docksmith_integration_phases PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
