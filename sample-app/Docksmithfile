@@ -1,5 +1,11 @@
-FROM scratch
+FROM alpine:3.18
 
 WORKDIR /app
 
+ENV GREETING=Hello
+
 COPY app.txt /app/app.txt
+
+RUN echo "build complete" > /app/build_marker.txt
+
+CMD ["/bin/sh","-c","echo ${GREETING}, Docksmith!; cat /app/app.txt; cat /app/build_marker.txt"]

@@ -132,7 +132,9 @@ int Run(const std::string& stateRoot, const std::vector<std::string>& args) {
     } else if (!loaded.manifest.config.cmd.empty()) {
         command = loaded.manifest.config.cmd;
     } else {
-        command = {"/bin/sh"};
+        cleanup();
+        std::cerr << "No CMD defined in image and no runtime command override provided\n";
+        return 1;
     }
 
     const auto env = ParseEnvVars(loaded.manifest.config.env, envOverrides);
