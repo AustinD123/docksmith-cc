@@ -451,6 +451,8 @@ std::vector<std::string> EnvMapToList(const std::map<std::string, std::string>& 
 }  // namespace
 
 int Build(const std::string& stateRoot, const std::vector<std::string>& args) {
+    const auto buildStart = std::chrono::steady_clock::now();
+
     const auto buildArgs = ParseBuildArgs(args);
     if (!buildArgs.ok) {
         std::cerr << buildArgs.error << "\n";
@@ -772,8 +774,11 @@ int Build(const std::string& stateRoot, const std::vector<std::string>& args) {
         digest = digest.substr(0, 12U);
     }
 
+    const auto totalElapsed =
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - buildStart);
     std::cout << "Successfully built sha256:" << digest << " " << buildArgs.imageName << ":"
-              << buildArgs.imageTag << "\n";
+              << buildArgs.imageTag << " (" << std::fixed << std::setprecision(2)
+              << totalElapsed.count() << "s)\n";
     return 0;
 }
 
